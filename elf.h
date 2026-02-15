@@ -1,7 +1,7 @@
 #ifndef _ELF_H
 #define _ELF_H
 
-#include <cstdint>
+typedef unsigned char Elf_Byte;
 
 typedef unsigned int Elf32_Addr;
 typedef unsigned int Elf32_Off;
@@ -18,6 +18,18 @@ typedef int Elf64_SWord;
 typedef unsigned long long int Elf64_Xword;
 typedef long long int Elf64_Sxword;
 typedef unsigned char Elf64_Byte;
+
+#ifndef INLINE
+#define INLINE extern inline
+#endif
+
+#ifndef NULL
+#if defined (__null)
+#define NULL __null
+#else 
+#define NULL 0
+#endif
+#endif
 
 #define EI_NIDENT 16
 
@@ -51,7 +63,7 @@ typedef unsigned char Elf64_Byte;
 #define EI_MAG3 3
 #define EI_CLASS 4
 #define EI_DATA 5
-#define EI_VERSION 6
+#define EI_VERSION 6 // version
 #define EI_OSABI 7
 #define EI_ABIVERSION 8
 #define EI_PAD 9 // start of padding bytes
@@ -61,9 +73,28 @@ typedef unsigned char Elf64_Byte;
 #define ELFMAG1 'E'
 #define ELFMAG2 'L'
 #define ELFMAG3 'F'
+// EI_CLASS
+#define ELFCLASSNONE 0 // invliad
+#define ELFCLASS32 1
+#define ELFCLASS64 2
+// EI_DATA
+#define ELFDATANONE 0
+#define ELFDATA2LSB 1
+#define ELFDATA2MSB 2
 
+#define ELFOSABI_NONE 0
+#define ELFOSABI_HPUX 1
+#define ELFOSABI_NETBSD 2
+#define ELFOSABI_GNU 3
+#define ELFOSABI_LINUX 3
+#define ELFOSABI_FREEBSD 9
+#define ELFOSABI_OPENBSD 12
+
+/////////////////
+// ELF headers //
+/////////////////
 typedef struct {
-        Elf32_Byte      e_ident[EI_NIDENT];
+        unsigned char   e_ident[EI_NIDENT];
         Elf32_Half      e_type;
         Elf32_Half      e_machine;
         Elf32_Word      e_version;
@@ -77,10 +108,10 @@ typedef struct {
         Elf32_Half      e_shentsize;
         Elf32_Half      e_shnum;
         Elf32_Half      e_shstrndx;
-} Elf32_Ehdr;
+} Elf32_Ehdr; 
 
 typedef struct {
-        Elf64_Byte      e_ident[EI_NIDENT];
+        unsigned char   e_ident[EI_NIDENT];
         Elf64_Half      e_type;
         Elf64_Half      e_machine;
         Elf64_Word      e_version;
@@ -94,6 +125,120 @@ typedef struct {
         Elf64_Half      e_shentsize;
         Elf64_Half      e_shnum;
         Elf64_Half      e_shstrndx;
-} Elf64_Ehdr;
+} Elf64_Ehdr; // 64 bit header
+
+// section indexes
+#define SHN_UNDEF 0
+#define SHN_LORESERVE 0xff00
+#define SHN_LOPROC 0xff00
+#define SHN_HIPROC 0xff1f
+#define SHN_LOOS 0xff20
+#define SHN_HIOS 0xff3f
+#define SHN_ABS 0xfff1
+#define SHN_COMMON 0xfff2
+#define SHN_XINDEX 0xffff
+#define SHN_HIRESERVE 0xffff
+
+// scetion types
+#define SHT_NULL 0
+#define SHT_PROGBITS 1
+#define SHT_SYMTAB 2
+#define SHT_STRTAB 3
+#define SHT_RELA 4
+#define SHT_HASH 5
+#define SHT_DYNAMIC 6
+#define SHT_NOTE 7
+#define SHT_NOBITS 8
+#define SHT_REL 9
+#define SHT_SHLIB 10
+#define SHT_DYNSYM 11
+#define SHT_INIT_ARRAY 14
+#define SHT_FINI_ARRAY 15
+#define SHT_PREINIT_ARRAY 16
+#define SHT_GROUP 17
+#define SHT_SYMTAB_SHNDX 18
+#define SHT_LOOS 0x60000000
+#define SHT_HIOS 0x6fffffff
+#define SHT_LOPROC 0x70000000
+#define SHT_HIPROC 0x7fffffff
+#define SHT_LOUSER 0x80000000
+#define SHT_HIUSER 0xffffffff
+
+//////////////////
+// ELF sections //
+//////////////////
+typedef struct {
+	Elf32_Word	sh_name;
+	Elf32_Word	sh_type;
+	Elf32_Word	sh_flags;
+	Elf32_Addr	sh_addr;
+	Elf32_Off	sh_offset;
+	Elf32_Word	sh_size;
+	Elf32_Word	sh_link;
+	Elf32_Word	sh_info;
+	Elf32_Word	sh_addralign;
+	Elf32_Word	sh_entsize;
+} Elf32_Shdr;
+
+typedef struct {
+	Elf64_Word	sh_name;
+	Elf64_Word	sh_type;
+	Elf64_Xword	sh_flags;
+	Elf64_Addr	sh_addr;
+	Elf64_Off	sh_offset;
+	Elf64_Xword	sh_size;
+	Elf64_Word	sh_link;
+	Elf64_Word	sh_info;
+	Elf64_Xword	sh_addralign;
+	Elf64_Xword	sh_entsize;
+} Elf64_Shdr; 
+
+INLINE Elf_Byte elf_check(Elf_Byte *buf)
+{
+    return buf[EI_MAG0] == ELFMAG0 &&
+        buf[EI_MAG1] == ELFMAG1 &&
+        buf[EI_MAG2] == ELFMAG2 &&
+        buf[EI_MAG3] == ELFMAG3;
+}
+
+INLINE Elf_Byte elf_get_class(Elf_Byte *buf)
+{
+    return buf[EI_CLASS];
+}
+
+INLINE Elf_Byte elf_get_data(Elf_Byte *buf)
+{
+    return buf[EI_DATA];
+}
+
+INLINE Elf32_Ehdr *elf_get_header32(Elf_Byte *buf)
+{
+    return (Elf32_Ehdr *)buf;
+}
+
+INLINE Elf64_Ehdr *elf_get_header64(Elf_Byte *buf)
+{
+    return (Elf64_Ehdr *)buf;
+}
+
+INLINE Elf32_Shdr *elf_get_segment32(Elf_Byte *buf)
+{
+    Elf32_Ehdr *header = (Elf32_Ehdr *)buf;
+    Elf32_Off off = header->e_shoff;
+
+    if(off == 0) return NULL;
+
+    return (Elf32_Shdr *)(buf + off);
+}
+
+INLINE Elf64_Shdr *elf_get_segment64(Elf_Byte *buf)
+{
+    Elf64_Ehdr *header = (Elf64_Ehdr *)buf;
+    Elf64_Off off = header->e_shoff;
+
+    if(off == 0) return NULL;
+
+    return (Elf64_Shdr *)(buf + off);
+}
 
 #endif
