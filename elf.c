@@ -81,7 +81,7 @@ const char *elf_section_name64(Elf64_Ehdr *header, Elf64_Word index)
 
 void elf_print_section_flags(int flags)
 {
-    int flags_vals[13] = {
+    int flag_masks[13] = {
         SHF_WRITE,
         SHF_ALLOC,
         SHF_EXECINSTR,
@@ -96,4 +96,45 @@ void elf_print_section_flags(int flags)
         SHF_MASKOS,
         SHF_MASKPROC
     };
+
+    const char *flag_str[13] = {
+        "WRITE",
+        "ALLOC",
+        "EXECINSTR",
+        "MERGE",
+        "STRINGS",
+        "INFO_LINK",
+        "LINK_ORDER",
+        "OS_NONCONFORMING",
+        "GROUP",
+        "TLS",
+        "COMPRESSED",
+        "MASKOS",
+        "MASKPROC"
+    };
+
+    printf("Flags:\n");
+
+    for(int i = 0; i < 13; i++)
+    {
+        if(flags & flag_masks[i])
+        {
+            printf("%s\n", flag_str[i]);
+        }
+    }
 }
+
+Elf32_Sym *elf_get_sym_n_table32(Elf32_Ehdr *header, Elf32_Shdr *sheader, Elf32_Word n)
+{
+    if((sheader->sh_type != SHT_SYMTAB && sheader->sh_type != SHT_DYNSYM) || n >= sheader->sh_size/sheader->sh_entsize) return NULL;
+
+    return (Elf32_Sym *)(((unsigned char *)elf_get_section32((unsigned char *)header, sheader)) + n * sheader->sh_entsize);
+};
+
+Elf64_Sym *elf_get_sym_n_table64(Elf64_Ehdr *header, Elf64_Shdr *sheader, Elf64_Word n)
+{
+    if((sheader->sh_type != SHT_SYMTAB && sheader->sh_type != SHT_DYNSYM) || n >= sheader->sh_size/sheader->sh_entsize) return NULL;
+
+    return (Elf64_Sym *)(((unsigned char *)elf_get_section64((unsigned char *)header, sheader)) + n * sheader->sh_entsize);
+}
+

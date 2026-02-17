@@ -1,5 +1,3 @@
 elfing
-test/test32
-test/test32.o
-test/test64
-test/test64.o
+test/test32*
+test/test64*

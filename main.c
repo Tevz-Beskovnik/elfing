@@ -38,7 +38,7 @@ void print_ehdr64(Elf64_Ehdr *header)
 void print_shdr32(Elf32_Ehdr *header, Elf32_Shdr *sheader)
 {
     printf("name: %s, type: %d, flags: %d, addr: %d,\n"
-           "off: %d, size: %d, link %d\n"
+           "off: %d, size: %d, link: %d\n"
            "info: %d, addr_align: %d, entsize: %d\n", 
            elf_section_name32(header, sheader->sh_name), sheader->sh_type, sheader->sh_flags, sheader->sh_addr,
            sheader->sh_offset, sheader->sh_size, sheader->sh_link,
@@ -48,11 +48,35 @@ void print_shdr32(Elf32_Ehdr *header, Elf32_Shdr *sheader)
 void print_shdr64(Elf64_Ehdr *header, Elf64_Shdr *sheader)
 {
     printf("name: %s, type: %d, flags: %lld, addr: %lld,\n"
-           "off: %lld, size: %lld, link %d\n"
+           "off: %lld, size: %lld, link: %d\n"
            "info: %d, addr_align: %lld, entsize: %lld\n", 
            elf_section_name64(header, sheader->sh_name), sheader->sh_type, sheader->sh_flags, sheader->sh_addr,
            sheader->sh_offset, sheader->sh_size, sheader->sh_link,
            sheader->sh_info, sheader->sh_addralign, sheader->sh_entsize);
+}
+
+void print_sym32(Elf32_Sym *sym, void *sym_sect)
+{
+    const char *name = ((const char *)sym_sect) + sym->st_name;
+
+    printf("name: %s, value %d, size: %d\n"
+           "type: %d, bind: %d, visibility: %d\n"
+           "shindx: %d\n", 
+           name, sym->st_value, sym->st_size,
+           ELF32_ST_TYPE(sym->st_info), ELF32_ST_BIND(sym->st_info), ELF32_ST_VISIBILITY(sym->st_other),
+           sym->st_shndx);
+}
+
+void print_sym64(Elf64_Sym *sym, void *sym_sect)
+{
+    const char *name = ((const char *)sym_sect) + sym->st_name;
+
+    printf("name: %s, value %lld, size: %lld\n"
+           "type: %d, bind: %d, visibility: %d\n"
+           "shindx: %d\n", 
+           name, sym->st_value, sym->st_size,
+           ELF32_ST_TYPE(sym->st_info), ELF32_ST_BIND(sym->st_info), ELF32_ST_VISIBILITY(sym->st_other),
+           sym->st_shndx);
 }
 
 int main(int argc, char *argv[])
@@ -79,8 +103,6 @@ int main(int argc, char *argv[])
 
     fread((void *)buffer, 1, size, fptr);
 
-    printf("%d%d%d%d\n", buffer[0], buffer[1], buffer[2], buffer[3]);
-
     if(!elf_check(buffer))
     {
         printf("Invalid elf header\n");
@@ -103,6 +125,9 @@ int main(int argc, char *argv[])
         {
             sheader = elf_get_section_n_header32(header, i);
             print_shdr32(header, sheader);
+
+            elf_print_section_flags(sheader->sh_flags);
+
             printf("=====\n");
         }
     }
@@ -120,6 +145,9 @@ int main(int argc, char *argv[])
         {
             sheader = elf_get_section_n_header64(header, i);
             print_shdr64(header, sheader);
+
+            elf_print_section_flags(sheader->sh_flags);
+
             printf("=====\n");
         }
     }
