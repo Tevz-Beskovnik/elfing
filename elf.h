@@ -19,10 +19,6 @@ typedef unsigned long long int Elf64_Xword;
 typedef long long int Elf64_Sxword;
 typedef unsigned char Elf64_Byte;
 
-#ifndef INLINE
-#define INLINE extern inline
-#endif
-
 #ifndef NULL
 #if defined (__null)
 #define NULL __null
@@ -164,6 +160,21 @@ typedef struct {
 #define SHT_LOUSER 0x80000000
 #define SHT_HIUSER 0xffffffff
 
+// flag masks
+#define SHF_WRITE 0x1
+#define SHF_ALLOC 0x2
+#define SHF_EXECINSTR 0x4
+#define SHF_MERGE 0x10
+#define SHF_STRINGS 0x20
+#define SHF_INFO_LINK 0x40
+#define SHF_LINK_ORDER 0x80
+#define SHF_OS_NONCONFORMING 0x100
+#define SHF_GROUP 0x200
+#define SHF_TLS 0x400
+#define SHF_COMPRESSED 0x800
+#define SHF_MASKOS 0x0ff00000
+#define SHF_MASKPROC 0xf0000000
+
 //////////////////
 // ELF sections //
 //////////////////
@@ -193,52 +204,28 @@ typedef struct {
 	Elf64_Xword	sh_entsize;
 } Elf64_Shdr; 
 
-INLINE Elf_Byte elf_check(Elf_Byte *buf)
-{
-    return buf[EI_MAG0] == ELFMAG0 &&
-        buf[EI_MAG1] == ELFMAG1 &&
-        buf[EI_MAG2] == ELFMAG2 &&
-        buf[EI_MAG3] == ELFMAG3;
-}
+Elf_Byte elf_check(Elf_Byte *buf);
 
-INLINE Elf_Byte elf_get_class(Elf_Byte *buf)
-{
-    return buf[EI_CLASS];
-}
+Elf_Byte elf_get_class(Elf_Byte *buf);
 
-INLINE Elf_Byte elf_get_data(Elf_Byte *buf)
-{
-    return buf[EI_DATA];
-}
+Elf_Byte elf_get_data(Elf_Byte *buf);
 
-INLINE Elf32_Ehdr *elf_get_header32(Elf_Byte *buf)
-{
-    return (Elf32_Ehdr *)buf;
-}
+Elf32_Ehdr *elf_get_header32(Elf_Byte *buf);
 
-INLINE Elf64_Ehdr *elf_get_header64(Elf_Byte *buf)
-{
-    return (Elf64_Ehdr *)buf;
-}
+Elf64_Ehdr *elf_get_header64(Elf_Byte *buf);
 
-INLINE Elf32_Shdr *elf_get_segment32(Elf_Byte *buf)
-{
-    Elf32_Ehdr *header = (Elf32_Ehdr *)buf;
-    Elf32_Off off = header->e_shoff;
+Elf32_Shdr *elf_get_section_n_header32(Elf32_Ehdr *header, Elf32_Half n);
 
-    if(off == 0) return NULL;
+Elf64_Shdr *elf_get_section_n_header64(Elf64_Ehdr *header, Elf64_Half n);
 
-    return (Elf32_Shdr *)(buf + off);
-}
+void *elf_get_section32(Elf_Byte *buf, Elf32_Shdr *header);
 
-INLINE Elf64_Shdr *elf_get_segment64(Elf_Byte *buf)
-{
-    Elf64_Ehdr *header = (Elf64_Ehdr *)buf;
-    Elf64_Off off = header->e_shoff;
+void *elf_get_section64(Elf_Byte *buf, Elf64_Shdr *header);
 
-    if(off == 0) return NULL;
+const char *elf_section_name32(Elf32_Ehdr *header, Elf32_Word index);
 
-    return (Elf64_Shdr *)(buf + off);
-}
+const char *elf_section_name64(Elf64_Ehdr *header, Elf64_Word index);
+
+void elf_print_section_flags(int flags);
 
 #endif

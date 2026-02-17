@@ -9,12 +9,14 @@ void print_ehdr32(Elf32_Ehdr *header)
            "section header offset: %d, count: %d, size: %d\n"
            "program header offset: %d, count: %d, size: %d\n"
            "flags: %d\n"
-           "ehsize: %d\n",
+           "ehsize: %d\n"
+           "secton string index: %d\n",
            header->e_type, header->e_machine, header->e_version, header->e_entry,
            header->e_shoff, header->e_shnum, header->e_shentsize,
            header->e_phoff, header->e_phnum, header->e_phentsize,
            header->e_flags,
-           header->e_ehsize);
+           header->e_ehsize,
+           header->e_shstrndx);
 }
 
 void print_ehdr64(Elf64_Ehdr *header)
@@ -23,12 +25,34 @@ void print_ehdr64(Elf64_Ehdr *header)
            "section header offset: %lld, count: %d, size: %d\n"
            "program header offset: %lld, count: %d, size: %d\n"
            "flags: %d\n"
-           "ehsize: %d\n",
+           "ehsize: %d\n"
+           "section string index: %d\n",
            header->e_type, header->e_machine, header->e_version, header->e_entry,
            header->e_shoff, header->e_shnum, header->e_shentsize,
            header->e_phoff, header->e_phnum, header->e_phentsize,
            header->e_flags,
-           header->e_ehsize);
+           header->e_ehsize,
+           header->e_shstrndx);
+}
+
+void print_shdr32(Elf32_Ehdr *header, Elf32_Shdr *sheader)
+{
+    printf("name: %s, type: %d, flags: %d, addr: %d,\n"
+           "off: %d, size: %d, link %d\n"
+           "info: %d, addr_align: %d, entsize: %d\n", 
+           elf_section_name32(header, sheader->sh_name), sheader->sh_type, sheader->sh_flags, sheader->sh_addr,
+           sheader->sh_offset, sheader->sh_size, sheader->sh_link,
+           sheader->sh_info, sheader->sh_addralign, sheader->sh_entsize);
+}
+
+void print_shdr64(Elf64_Ehdr *header, Elf64_Shdr *sheader)
+{
+    printf("name: %s, type: %d, flags: %lld, addr: %lld,\n"
+           "off: %lld, size: %lld, link %d\n"
+           "info: %d, addr_align: %lld, entsize: %lld\n", 
+           elf_section_name64(header, sheader->sh_name), sheader->sh_type, sheader->sh_flags, sheader->sh_addr,
+           sheader->sh_offset, sheader->sh_size, sheader->sh_link,
+           sheader->sh_info, sheader->sh_addralign, sheader->sh_entsize);
 }
 
 int main(int argc, char *argv[])
@@ -67,16 +91,38 @@ int main(int argc, char *argv[])
 
     if(class == ELFCLASS32)
     {
+        Elf32_Ehdr *header = elf_get_header32(buffer);
+
         printf("Header type ELF_32\n");
-        print_ehdr32(elf_get_header32(buffer));
+        print_ehdr32(header);
+
+        printf("Segments: ");
+
+        Elf32_Shdr *sheader;
+        for(int i = 0; i < header->e_shnum; i++)
+        {
+            sheader = elf_get_section_n_header32(header, i);
+            print_shdr32(header, sheader);
+            printf("=====\n");
+        }
     }
     else if(class == ELFCLASS64)
     {
+        Elf64_Ehdr *header = elf_get_header64(buffer);
+
         printf("Header type ELF_64\n");
-        print_ehdr64(elf_get_header64(buffer));
+        print_ehdr64(header);
+
+        printf("Segments: ");
+
+        Elf64_Shdr *sheader;
+        for(int i = 0; i < header->e_shnum; i++)
+        {
+            sheader = elf_get_section_n_header64(header, i);
+            print_shdr64(header, sheader);
+            printf("=====\n");
+        }
     }
-
-
 
     free(buffer);
 
