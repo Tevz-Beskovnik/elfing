@@ -1,7 +1,23 @@
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include "./elf.h"
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include "./src/elf.h"
+
+#define BUILD_WATCH_LIST "./src/elf.h"
+
+#define ARGS_INIT
+#define ARGS_LIST \
+    REQUIRED_ARG(input, std::string, "Input file to be parsed") \
+    BOOLEAN_ARG(elf-header, "Print out the elf header") \
+    BOOLEAN_ARG(section-headers, "Print out the elf sections") \
+    BOOLEAN_ARG(program-headers, "Print out the program headers") \
+    BOOLEAN_ARG(flags, "Print out the flags (if the section has them)") \
+    OPTIONAL_ARG(section-header, int)
+
+#define ARGS_PROGRAM_DESCRIPTION "This is a test program"
+
+#include "./nob.h"
+#include "./src/args.h"
 
 void print_ehdr32(Elf32_Ehdr *header)
 {
@@ -79,8 +95,66 @@ void print_sym64(Elf64_Sym *sym, void *sym_sect)
            sym->st_shndx);
 }
 
+void print_syms32(Elf32_Ehdr *header, Elf32_Shdr *sheader)
+{
+    for(int i = 0; i < sheader->sh_size / sheader->sh_entsize; i++)
+    {
+        if(i == 0) continue;
+
+        Elf32_Sym *sym = elf_get_sym_n_table32(header, sheader, i);
+        if(sym == NULL)
+        {
+            printf("Failed getting symbol from symtab\n");
+            return;
+        }
+                   
+        Elf32_Shdr *str_sect = (Elf32_Shdr *)((unsigned char *)sheader + sizeof(Elf32_Shdr));
+        print_sym32(sym, elf_get_section32((unsigned char *)header, str_sect));
+    }
+}
+
+void print_syms64(Elf64_Ehdr *header, Elf64_Shdr *sheader)
+{
+    for(int i = 0; i < sheader->sh_size / sheader->sh_entsize; i++)
+    {
+        if(i == 0) continue;
+
+        Elf64_Sym *sym = elf_get_sym_n_table64(header, sheader, i);
+        if(sym == NULL)
+        {
+            printf("Failed getting symbol from symtab\n");
+            return;
+        }
+                   
+        Elf64_Shdr *str_sect = (Elf64_Shdr *)((unsigned char *)sheader + sizeof(Elf64_Shdr));
+        print_sym64(sym, elf_get_section64((unsigned char *)header, str_sect));
+    }
+}
+
+void print_phdr32(Elf32_Phdr *header)
+{
+    printf("type: %d, flags: %d, offset: %d\n"
+           "vaddr: %d, paddr: %d\n"
+           "file size: %d, memory size: %d, align: %d\n",
+           header->p_type, header->p_flags, header->p_offset,
+           header->p_vaddr, header->p_paddr,
+           header->p_filesz, header->p_memsz, header->p_align);
+}
+
+void print_phdr64(Elf64_Phdr *header)
+{
+    printf("type: %d, flags: %d, offset: %lld\n"
+           "vaddr: %lld, paddr: %lld\n"
+           "file size: %lld, memory size: %lld, align: %lld\n",
+           header->p_type, header->p_flags, header->p_offset,
+           header->p_vaddr, header->p_paddr,
+           header->p_filesz, header->p_memsz, header->p_align);
+}
+
 int main(int argc, char *argv[])
 {
+    REBUILD_SELF_AND_WATCH(argc, argv, "./elf.c");
+
     if(argc < 2) return EXIT_FAILURE;
 
     FILE *fptr;
@@ -109,44 +183,59 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    uint8_t class = elf_get_class(buffer);
+    uint8_t elf_class = elf_get_class(buffer);
 
-    if(class == ELFCLASS32)
+    if(elf_class == ELFCLASS32)
     {
         Elf32_Ehdr *header = elf_get_header32(buffer);
 
         printf("Header type ELF_32\n");
         print_ehdr32(header);
 
-        printf("Segments: ");
+        printf("Segments: \n");
 
         Elf32_Shdr *sheader;
         for(int i = 0; i < header->e_shnum; i++)
         {
             sheader = elf_get_section_n_header32(header, i);
-            print_shdr32(header, sheader);
 
+            print_shdr32(header, sheader);
             elf_print_section_flags(sheader->sh_flags);
+            
+            if(sheader->sh_type == SHT_DYNSYM || sheader->sh_type == SHT_SYMTAB)
+            {
+                printf("Symbol table in entry %d:\n", i);
+               
+                print_syms32(header, sheader);
+            }
 
             printf("=====\n");
         }
     }
-    else if(class == ELFCLASS64)
+    else if(elf_class == ELFCLASS64)
     {
         Elf64_Ehdr *header = elf_get_header64(buffer);
 
         printf("Header type ELF_64\n");
         print_ehdr64(header);
 
-        printf("Segments: ");
+        printf("Segments: \n");
 
         Elf64_Shdr *sheader;
         for(int i = 0; i < header->e_shnum; i++)
         {
             sheader = elf_get_section_n_header64(header, i);
-            print_shdr64(header, sheader);
 
-            elf_print_section_flags(sheader->sh_flags);
+            printf("Symbol table in entry %d:\n", i);
+            print_shdr64(header, sheader);
+            
+            if(sheader->sh_type == SHT_DYNSYM || sheader->sh_type == SHT_SYMTAB)
+            {
+                elf_print_section_flags(sheader->sh_flags);
+
+                print_syms64(header, sheader);
+                
+            }
 
             printf("=====\n");
         }

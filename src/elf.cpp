@@ -1,5 +1,5 @@
 #include "elf.h"
-#include <stdio.h>
+#include <cstdio>
 
 Elf_Byte elf_check(Elf_Byte *buf)
 {
@@ -81,7 +81,7 @@ const char *elf_section_name64(Elf64_Ehdr *header, Elf64_Word index)
 
 void elf_print_section_flags(int flags)
 {
-    int flag_masks[13] = {
+    unsigned int flag_masks[13] = {
         SHF_WRITE,
         SHF_ALLOC,
         SHF_EXECINSTR,
@@ -136,5 +136,23 @@ Elf64_Sym *elf_get_sym_n_table64(Elf64_Ehdr *header, Elf64_Shdr *sheader, Elf64_
     if((sheader->sh_type != SHT_SYMTAB && sheader->sh_type != SHT_DYNSYM) || n >= sheader->sh_size/sheader->sh_entsize) return NULL;
 
     return (Elf64_Sym *)(((unsigned char *)elf_get_section64((unsigned char *)header, sheader)) + n * sheader->sh_entsize);
+}
+
+Elf32_Phdr *elf_get_n_program_header32(Elf32_Ehdr *header, Elf32_Word n)
+{
+    if(n >= header->e_phnum) return NULL;
+
+    Elf32_Word off = header->e_phoff;
+
+    return ((Elf32_Phdr *)((unsigned char *)header + off)) + n;
+}
+
+Elf64_Phdr *elf_get_n_program_header64(Elf64_Ehdr *header, Elf64_Word n)
+{
+    if(n >= header->e_phnum) return NULL;
+
+    Elf64_Word off = header->e_phoff;
+
+    return ((Elf64_Phdr *)((unsigned char *)header + off)) + n;
 }
 

@@ -123,6 +123,8 @@ typedef struct {
         Elf64_Half      e_shstrndx;
 } Elf64_Ehdr; // 64 bit header
 
+// START OF LINKTIME VIEW
+
 // section indexes
 // if the number of section is greater than SHN_LORESERVE 
 // then these indexes come into consideration
@@ -265,6 +267,56 @@ typedef struct {
 	Elf64_Xword	st_size;
 } Elf64_Sym;
 
+// END OF LINKTIME VIEW
+
+// START OF EXECUTION VIEW
+
+// program header types
+#define PT_NULL 	0
+#define PT_LOAD 	1
+#define PT_DYNAMIC 	2
+#define PT_INTERP 	3
+#define PT_NOTE 	4
+#define PT_SHLIB 	5
+#define PT_PHDR 	6
+#define PT_TLS 	    7
+#define PT_LOOS 	0x60000000
+#define PT_HIOS 	0x6fffffff
+#define PT_LOPROC 	0x70000000
+#define PT_HIPROC 	0x7fffffff
+
+#define PF_X 	0x1
+#define PF_W 	0x2
+#define PF_R 	0x4
+#define PF_MASKOS 	0x0ff00000
+#define PF_MASKPROC 	0xf0000000
+
+/////////////////////////
+// ELF Program headers //
+/////////////////////////
+
+typedef struct {
+	Elf32_Word	p_type;
+	Elf32_Off	p_offset;
+	Elf32_Addr	p_vaddr;
+	Elf32_Addr	p_paddr;
+	Elf32_Word	p_filesz;
+	Elf32_Word	p_memsz;
+	Elf32_Word	p_flags;
+	Elf32_Word	p_align;
+} Elf32_Phdr;
+
+typedef struct {
+	Elf64_Word	p_type;
+	Elf64_Word	p_flags;
+	Elf64_Off	p_offset;
+	Elf64_Addr	p_vaddr;
+	Elf64_Addr	p_paddr;
+	Elf64_Xword	p_filesz;
+	Elf64_Xword	p_memsz;
+	Elf64_Xword	p_align;
+} Elf64_Phdr;
+
 Elf_Byte elf_check(Elf_Byte *buf);
 
 Elf_Byte elf_get_class(Elf_Byte *buf);
@@ -292,5 +344,9 @@ void elf_print_section_flags(int flags);
 Elf32_Sym *elf_get_sym_n_table32(Elf32_Ehdr *header, Elf32_Shdr *sheader, Elf32_Word n);
 
 Elf64_Sym *elf_get_sym_n_table64(Elf64_Ehdr *header, Elf64_Shdr *sheader, Elf64_Word n);
+
+Elf32_Phdr *elf_get_n_program_header32(Elf32_Ehdr *header, Elf32_Word n);
+
+Elf64_Phdr *elf_get_n_program_header64(Elf64_Ehdr *header, Elf64_Word n);
 
 #endif
