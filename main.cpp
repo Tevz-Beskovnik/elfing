@@ -1,9 +1,9 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
-#include "./src/elf.h"
+#include "src/elf.h"
 
-#define BUILD_WATCH_LIST "./src/elf.h", "./src/util.h"
+#define BUILD_WATCH_LIST "src/elf.h", "src/util.h"
 
 #ifndef ARGS_INIT
 #define ARGS_INIT
@@ -19,14 +19,18 @@
 #define ARGS_PROGRAM_DESCRIPTION "A elf header parser"
 #endif
 
-#include "./nob.h"
-#include "./src/args.h"
-#include "./src/util.h"
+#ifndef NDEBUG
+#include "nob.h"
+#endif
+
+#define ARGS_IMPL
+#include "src/args.h"
+#include "src/util.h"
 
 int main(int argc, char *argv[])
 {
 #ifndef NDEBUG
-    REBUILD_SELF_AND_WATCH(argc, argv, "./src/elf.cpp", "./src/util.cpp");
+    REBUILD_SELF_AND_WATCH(argc, argv, "src/elf.cpp", "src/util.cpp");
 #endif
     args_t args;
     if(!parse_args(argc, argv, &args)) return EXIT_FAILURE;
@@ -46,8 +50,6 @@ int main(int argc, char *argv[])
     int size = ftell(fptr);
     fseek(fptr, 0, SEEK_SET);
 
-    printf("size: %d\n", size);
-
     uint8_t *buffer = (unsigned char *)malloc(size);
 
     fread((void *)buffer, 1, size, fptr);
@@ -57,16 +59,13 @@ int main(int argc, char *argv[])
         uint8_t elf_class = elf_get_class(buffer);
 
         if(elf_class == ELFCLASS32)
-        {
-            
-        }
+            parse_elf32(&args, buffer);
         else if(elf_class == ELFCLASS64)
-        {
-            
-        }
+            parse_elf32(&args, buffer);
         else
         {
             printf("Bad elf class signature\n");
+            return EXIT_FAILURE;
         }
     }
     else
@@ -75,71 +74,6 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
     
-
-    if(!elf_check(buffer))
-    {
-        printf("Invalid elf header\n");
-        return EXIT_FAILURE;
-    }
-
-    uint8_t elf_class = elf_get_class(buffer);
-
-    if(elf_class == ELFCLASS32)
-    {
-        Elf32_Ehdr *header = elf_get_header32(buffer);
-
-        printf("Header type ELF_32\n");
-        print_ehdr32(header);
-
-        printf("Segments: \n");
-
-        Elf32_Shdr *sheader;
-        for(int i = 0; i < header->e_shnum; i++)
-        {
-            sheader = elf_get_section_n_header32(header, i);
-
-            print_shdr32(header, sheader);
-            elf_print_section_flags(sheader->sh_flags);
-            
-            if(sheader->sh_type == SHT_DYNSYM || sheader->sh_type == SHT_SYMTAB)
-            {
-                printf("Symbol table in entry %d:\n", i);
-               
-                print_syms32(header, sheader);
-            }
-
-            printf("=====\n");
-        }
-    }
-    else if(elf_class == ELFCLASS64)
-    {
-        Elf64_Ehdr *header = elf_get_header64(buffer);
-
-        printf("Header type ELF_64\n");
-        print_ehdr64(header);
-
-        printf("Segments: \n");
-
-        Elf64_Shdr *sheader;
-        for(int i = 0; i < header->e_shnum; i++)
-        {
-            sheader = elf_get_section_n_header64(header, i);
-
-            printf("Symbol table in entry %d:\n", i);
-            print_shdr64(header, sheader);
-            
-            if(sheader->sh_type == SHT_DYNSYM || sheader->sh_type == SHT_SYMTAB)
-            {
-                elf_print_section_flags(sheader->sh_flags);
-
-                print_syms64(header, sheader);
-                
-            }
-
-            printf("=====\n");
-        }
-    }
-
     free(buffer);
 
     return EXIT_SUCCESS;

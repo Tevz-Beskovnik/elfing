@@ -1,4 +1,4 @@
-#include "./util.h"
+#include "util.h"
 #include "elf.h"
 #include <cstdio>
 
@@ -200,11 +200,15 @@ void parse_elf32(args_t *args, uint8_t* buffer)
     }
     else if(args->section_header != -1)
     {
+        Elf32_Shdr *section_header = elf_get_section_n_header32(header, args->section_header);
 
+        print_shdr32(header, section_header);
     }
     else if(args->program_header != -1)
     {
+        Elf32_Phdr *phisical_header = elf_get_n_program_header32(header, args->program_header);
 
+        print_phdr32(phisical_header);
     }
 }
 
@@ -226,11 +230,14 @@ void parse_elf64(args_t *args, uint8_t* buffer)
     }
     else if(args->section_header != -1)
     {
+        Elf64_Shdr *section_header = elf_get_section_n_header64(header, args->section_header);
 
+        print_shdr64(header, section_header);
     }
     else if(args->program_header != -1)
     {
+        Elf64_Phdr *phisical_header = elf_get_n_program_header64(header, args->program_header);
 
+        print_phdr64(phisical_header);
     }
-
 }

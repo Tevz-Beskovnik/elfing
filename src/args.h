@@ -61,6 +61,8 @@ int _ARGS_INTERNAL_FN(parse_list_arg)(int argc, char *argv[], std::vector<T> *fi
 
 int _ARGS_INTERNAL_FN(parse_boolean_arg)(int argc, char *argv[], bool *field, const char *arg_name);
 
+#ifdef ARGS_IMPL
+
 ///////////////////
 // IMPLS
 ///////////////////
@@ -234,3 +236,5 @@ int _ARGS_INTERNAL_FN(parse_boolean_arg)(int argc, char *argv[], bool *field, co
     *field = false;
     return true;
 }
+
+#endif
