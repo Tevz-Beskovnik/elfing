@@ -2,107 +2,109 @@
 #include "elf.h"
 #include <cstdio>
 
-void print_ehdr32(Elf32_Ehdr *header)
+void print_ehdr32(Elf32_Ehdr *header, std::ostream &stream)
 {
-    printf("type: %d, machine: %d, version: %d, entry: %d\n"
-           "section header offset: %d, count: %d, size: %d\n"
-           "program header offset: %d, count: %d, size: %d\n"
-           "flags: %d\n"
-           "ehsize: %d\n"
-           "secton string index: %d\n",
-           header->e_type, header->e_machine, header->e_version, header->e_entry,
-           header->e_shoff, header->e_shnum, header->e_shentsize,
-           header->e_phoff, header->e_phnum, header->e_phentsize,
-           header->e_flags,
-           header->e_ehsize,
-           header->e_shstrndx);
+    stream << "type: " << elf_get_eh_type_name(header->e_type) << ", machine: " << header->e_machine 
+           << ", version: " << header->e_version << ", entry: " << header->e_entry << "\n"
+           "section header offset: " << header->e_shoff << ", count: " << header->e_shnum << ", size: " << header->e_shentsize << "\n"
+           "program header offset: " << header->e_phoff << ", count: " << header->e_phnum << ", size: " << header->e_phentsize << "\n"
+           "flags: " << header->e_flags << "\n"
+           "ehsize: " << header->e_ehsize << "\n"
+           "secton string index: " << header->e_shstrndx << "\n";
 }
 
-void print_ehdr64(Elf64_Ehdr *header)
+void print_ehdr64(Elf64_Ehdr *header, std::ostream &stream)
 {
-    printf("type: %d, machine: %d, version: %d, entry: %lld\n"
-           "section header offset: %lld, count: %d, size: %d\n"
-           "program header offset: %lld, count: %d, size: %d\n"
-           "flags: %d\n"
-           "ehsize: %d\n"
-           "section string index: %d\n",
-           header->e_type, header->e_machine, header->e_version, header->e_entry,
-           header->e_shoff, header->e_shnum, header->e_shentsize,
-           header->e_phoff, header->e_phnum, header->e_phentsize,
-           header->e_flags,
-           header->e_ehsize,
-           header->e_shstrndx);
+    stream << "type: " << elf_get_eh_type_name(header->e_type) << ", machine: " << header->e_machine 
+           << ", version: " << header->e_version << ", entry: " << header->e_entry << "\n"
+           "section header offset: " << header->e_shoff << ", count: " << header->e_shnum << ", size: " << header->e_shentsize << "\n"
+           "program header offset: " << header->e_phoff << ", count: " << header->e_phnum << ", size: " << header->e_phentsize << "\n"
+           "flags: " << header->e_flags << "\n"
+           "ehsize: " << header->e_ehsize << "\n"
+           "secton string index: " << header->e_shstrndx << "\n";
 }
 
-void print_shdr32(Elf32_Ehdr *header, Elf32_Shdr *sheader)
+void print_shdr32(Elf32_Ehdr *header, Elf32_Shdr *sheader, std::ostream &stream)
 {
-    printf("name: %s, type: %d, flags: %d, addr: %d,\n"
-           "off: %d, size: %d, link: %d\n"
-           "info: %d, addr_align: %d, entsize: %d\n", 
-           elf_section_name32(header, sheader->sh_name), sheader->sh_type, sheader->sh_flags, sheader->sh_addr,
-           sheader->sh_offset, sheader->sh_size, sheader->sh_link,
-           sheader->sh_info, sheader->sh_addralign, sheader->sh_entsize);
+    stream << "name: " << elf_section_name32(header, sheader->sh_name) 
+           << ", type: " << elf_get_sh_type_name(sheader->sh_type) 
+           << ", flags: " << sheader->sh_flags << ", addr: " << sheader->sh_addr << ",\n"
+           "off: " << sheader->sh_offset << ", size: " << sheader->sh_size << ", link: " << sheader->sh_link << "\n"
+           "info: " << sheader->sh_info << ", addr_align: " << sheader->sh_addralign << ", entsize: " << sheader->sh_entsize << "\n";
 }
 
-void print_shdr64(Elf64_Ehdr *header, Elf64_Shdr *sheader)
+void print_shdr64(Elf64_Ehdr *header, Elf64_Shdr *sheader, std::ostream &stream)
 {
-    printf("name: %s, type: %d, flags: %lld, addr: %lld,\n"
-           "off: %lld, size: %lld, link: %d\n"
-           "info: %d, addr_align: %lld, entsize: %lld\n", 
-           elf_section_name64(header, sheader->sh_name), sheader->sh_type, sheader->sh_flags, sheader->sh_addr,
-           sheader->sh_offset, sheader->sh_size, sheader->sh_link,
-           sheader->sh_info, sheader->sh_addralign, sheader->sh_entsize);
+    stream << "name: " << elf_section_name64(header, sheader->sh_name) 
+           << ", type: " << elf_get_sh_type_name(sheader->sh_type) 
+           << ", flags: " << sheader->sh_flags << ", addr: " << sheader->sh_addr << ",\n"
+           "off: " << sheader->sh_offset << ", size: " << sheader->sh_size << ", link: " << sheader->sh_link << "\n"
+           "info: " << sheader->sh_info << ", addr_align: " << sheader->sh_addralign << ", entsize: " << sheader->sh_entsize << "\n";
 }
 
-void print_shdrs32(Elf32_Ehdr *header)
+void print_shdrs32(Elf32_Ehdr *header, bool flags, bool syms, std::ostream &stream)
 {
     Elf32_Shdr *sheader;
-    printf("=========\n");
+    stream << "=========\n";
     for(int i = 0; i < header->e_shnum; i++)
     {
         sheader = elf_get_section_n_header32(header, i);
-        print_shdr32(header, sheader);
-        printf("=========\n");
+        print_shdr32(header, sheader, stream);
+
+        if(flags) elf_print_section_flags(sheader->sh_flags);
+
+        if(syms && (sheader->sh_type == SHT_DYNSYM || sheader->sh_type == SHT_SYMTAB)) print_syms32(header, sheader, stream);
+
+        stream << "=========\n";
     }
 }
 
-void print_shdrs64(Elf64_Ehdr *header)
+void print_shdrs64(Elf64_Ehdr *header, bool flags, bool syms, std::ostream &stream)
 {
     Elf64_Shdr *sheader;
-    printf("=========\n");
+    stream << "=========\n";
     for(int i = 0; i < header->e_shnum; i++)
     {
         sheader = elf_get_section_n_header64(header, i);
-        print_shdr64(header, sheader);
-        printf("=========\n");
+        print_shdr64(header, sheader, stream);
+
+        if(flags) elf_print_section_flags(sheader->sh_flags);
+
+        if(syms && (sheader->sh_type == SHT_DYNSYM || sheader->sh_type == SHT_SYMTAB)) print_syms64(header, sheader, stream);
+
+        stream << "=========\n";
     }
 }
 
-void print_sym32(Elf32_Sym *sym, void *sym_sect)
+void print_sym32(Elf32_Sym *sym, void *sym_sect, std::ostream &stream)
 {
     const char *name = ((const char *)sym_sect) + sym->st_name;
 
-    printf("name: %s, value %d, size: %d\n"
-           "type: %d, bind: %d, visibility: %d\n"
-           "shindx: %d\n", 
-           name, sym->st_value, sym->st_size,
-           ELF32_ST_TYPE(sym->st_info), ELF32_ST_BIND(sym->st_info), ELF32_ST_VISIBILITY(sym->st_other),
-           sym->st_shndx);
+    stream << "name: " << name
+           << ", value " << sym->st_value
+           << ", size: " << sym->st_size << "\n"
+           << "type: " << ELF32_ST_TYPE(sym->st_info)
+           << ", bind: " << ELF32_ST_BIND(sym->st_info)
+           << ", visibility: " << ELF32_ST_VISIBILITY(sym->st_other) << "\n"
+           << "shindx: " << sym->st_shndx
+           << std::endl;
 }
 
-void print_sym64(Elf64_Sym *sym, void *sym_sect)
+void print_sym64(Elf64_Sym *sym, void *sym_sect, std::ostream &stream)
 {
     const char *name = ((const char *)sym_sect) + sym->st_name;
 
-    printf("name: %s, value %lld, size: %lld\n"
-           "type: %d, bind: %d, visibility: %d\n"
-           "shindx: %d\n", 
-           name, sym->st_value, sym->st_size,
-           ELF32_ST_TYPE(sym->st_info), ELF32_ST_BIND(sym->st_info), ELF32_ST_VISIBILITY(sym->st_other),
-           sym->st_shndx);
+    stream << "name: " << name
+           << ", value " << sym->st_value
+           << ", size: " << sym->st_size << "\n"
+           << "type: " << ELF32_ST_TYPE(sym->st_info)
+           << ", bind: " << ELF32_ST_BIND(sym->st_info)
+           << ", visibility: " << ELF32_ST_VISIBILITY(sym->st_other) << "\n"
+           << "shindx: " << sym->st_shndx
+           << std::endl;
 }
 
-void print_syms32(Elf32_Ehdr *header, Elf32_Shdr *sheader)
+void print_syms32(Elf32_Ehdr *header, Elf32_Shdr *sheader, std::ostream &stream)
 {
     for(int i = 0; i < sheader->sh_size / sheader->sh_entsize; i++)
     {
@@ -116,11 +118,11 @@ void print_syms32(Elf32_Ehdr *header, Elf32_Shdr *sheader)
         }
                    
         Elf32_Shdr *str_sect = (Elf32_Shdr *)((unsigned char *)sheader + sizeof(Elf32_Shdr));
-        print_sym32(sym, elf_get_section32((unsigned char *)header, str_sect));
+        print_sym32(sym, elf_get_section32((unsigned char *)header, str_sect), stream);
     }
 }
 
-void print_syms64(Elf64_Ehdr *header, Elf64_Shdr *sheader)
+void print_syms64(Elf64_Ehdr *header, Elf64_Shdr *sheader, std::ostream &stream)
 {
     for(int i = 0; i < sheader->sh_size / sheader->sh_entsize; i++)
     {
@@ -134,57 +136,64 @@ void print_syms64(Elf64_Ehdr *header, Elf64_Shdr *sheader)
         }
                    
         Elf64_Shdr *str_sect = (Elf64_Shdr *)((unsigned char *)sheader + sizeof(Elf64_Shdr));
-        print_sym64(sym, elf_get_section64((unsigned char *)header, str_sect));
+        print_sym64(sym, elf_get_section64((unsigned char *)header, str_sect), stream);
     }
 }
 
-void print_phdr32(Elf32_Phdr *header)
+void print_phdr32(Elf32_Phdr *header, std::ostream &stream)
 {
-    printf("type: %d, flags: %d, offset: %d\n"
-           "vaddr: %d, paddr: %d\n"
-           "file size: %d, memory size: %d, align: %d\n",
-           header->p_type, header->p_flags, header->p_offset,
-           header->p_vaddr, header->p_paddr,
-           header->p_filesz, header->p_memsz, header->p_align);
+    stream << "type: " << elf_get_ph_type_name(header->p_type)
+           << ", flags: " << header->p_flags
+           << ", offset: " << header->p_offset << "\n"
+           << "vaddr: " << header->p_vaddr
+           << ", paddr: " << header->p_paddr << "\n"
+           << "file size: " << header->p_filesz
+           << ", memory size: " << header->p_memsz
+           << ", align: " << header->p_align
+           << std::endl;
 }
 
-void print_phdr64(Elf64_Phdr *header)
+void print_phdr64(Elf64_Phdr *header, std::ostream &stream)
 {
-    printf("type: %d, flags: %d, offset: %lld\n"
-           "vaddr: %lld, paddr: %lld\n"
-           "file size: %lld, memory size: %lld, align: %lld\n",
-           header->p_type, header->p_flags, header->p_offset,
-           header->p_vaddr, header->p_paddr,
-           header->p_filesz, header->p_memsz, header->p_align);
+    stream << "type: " << elf_get_ph_type_name(header->p_type)
+           << ", flags: " << header->p_flags
+           << ", offset: " << header->p_offset << "\n"
+           << "vaddr: " << header->p_vaddr
+           << ", paddr: " << header->p_paddr << "\n"
+           << "file size: " << header->p_filesz
+           << ", memory size: " << header->p_memsz
+           << ", align: " << header->p_align
+           << std::endl;
 }
 
-void print_phdrs32(Elf32_Ehdr *header)
+void print_phdrs32(Elf32_Ehdr *header, std::ostream &stream)
 {
     Elf32_Phdr *sheader;
-    printf("=========\n");
-    for(int i = 0; i < header->e_shnum; i++)
+    stream << "=========\n";
+    for(int i = 0; i < header->e_phnum; i++)
     {
         sheader = elf_get_n_program_header32(header, i);
-        print_phdr32(sheader);
-        printf("=========\n");
+        print_phdr32(sheader, stream);
+        stream << "=========\n";
     }
 }
 
-void print_phdrs64(Elf64_Ehdr *header)
+void print_phdrs64(Elf64_Ehdr *header, std::ostream &stream)
 {
     Elf64_Phdr *sheader;
-    printf("=========\n");
-    for(int i = 0; i < header->e_shnum; i++)
+    stream << "=========\n";
+    for(int i = 0; i < header->e_phnum; i++)
     {
         sheader = elf_get_n_program_header64(header, i);
-        print_phdr64(sheader);
-        printf("=========\n");
+        print_phdr64(sheader, stream);
+        stream << "=========\n";
     }
 }
 
 void parse_elf32(args_t *args, uint8_t* buffer)
 {
     Elf32_Ehdr *header = elf_get_header32(buffer);
+    printf("Elf format 32\n");
 
     if(args->elf_header)
     {
@@ -192,7 +201,7 @@ void parse_elf32(args_t *args, uint8_t* buffer)
     }
     else if(args->section_headers)
     {
-        print_shdrs32(header);
+        print_shdrs32(header, args->flags, args->syms);
     }
     else if(args->program_headers)
     {
@@ -203,6 +212,10 @@ void parse_elf32(args_t *args, uint8_t* buffer)
         Elf32_Shdr *section_header = elf_get_section_n_header32(header, args->section_header);
 
         print_shdr32(header, section_header);
+
+        if(args->flags) elf_print_section_flags(section_header->sh_flags);
+        
+        if(args->syms && (section_header->sh_type == SHT_DYNSYM || section_header->sh_type == SHT_SYMTAB)) print_syms32(header, section_header);
     }
     else if(args->program_header != -1)
     {
@@ -216,13 +229,15 @@ void parse_elf64(args_t *args, uint8_t* buffer)
 {
     Elf64_Ehdr *header = elf_get_header64(buffer);
 
+    printf("Elf format 64\n");
+
     if(args->elf_header)
     {
         print_ehdr64(header);
     }
     else if(args->section_headers)
     {
-        print_shdrs64(header);
+        print_shdrs64(header, args->flags, args->syms);
     }
     else if(args->program_headers)
     {
@@ -233,6 +248,10 @@ void parse_elf64(args_t *args, uint8_t* buffer)
         Elf64_Shdr *section_header = elf_get_section_n_header64(header, args->section_header);
 
         print_shdr64(header, section_header);
+
+        if(args->flags) elf_print_section_flags(section_header->sh_flags);
+
+        if(args->syms && (section_header->sh_type == SHT_DYNSYM || section_header->sh_type == SHT_SYMTAB)) print_syms64(header, section_header);
     }
     else if(args->program_header != -1)
     {

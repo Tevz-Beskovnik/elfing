@@ -13,6 +13,7 @@
     BOOLEAN_ARG(section_headers, "Print out the elf sections") \
     BOOLEAN_ARG(program_headers, "Print out the program headers") \
     BOOLEAN_ARG(flags, "Print out the flags (if the section has them)") \
+    BOOLEAN_ARG(syms, "Bellow the sections that contain them, print their symbols") \
     OPTIONAL_ARG(section_header, int, "Section header to print", -1) \
     OPTIONAL_ARG(program_header, int, "Program header to print", -1) \
 
@@ -61,7 +62,7 @@ int main(int argc, char *argv[])
         if(elf_class == ELFCLASS32)
             parse_elf32(&args, buffer);
         else if(elf_class == ELFCLASS64)
-            parse_elf32(&args, buffer);
+            parse_elf64(&args, buffer);
         else
         {
             printf("Bad elf class signature\n");

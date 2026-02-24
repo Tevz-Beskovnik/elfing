@@ -250,22 +250,52 @@ typedef struct {
 // ELF symtabs //
 /////////////////
 typedef struct {
-	Elf32_Word	st_name;
-	Elf32_Addr	st_value;
-	Elf32_Word	st_size;
+	Elf32_Word	    st_name;
+	Elf32_Addr	    st_value;
+	Elf32_Word	    st_size;
 	unsigned char	st_info;
 	unsigned char	st_other;
-	Elf32_Half	st_shndx;
+	Elf32_Half      st_shndx;
 } Elf32_Sym;
 
 typedef struct {
-	Elf64_Word	st_name;
+	Elf64_Word	    st_name;
 	unsigned char	st_info;
 	unsigned char	st_other;
-	Elf64_Half	st_shndx;
-	Elf64_Addr	st_value;
-	Elf64_Xword	st_size;
+	Elf64_Half	    st_shndx;
+	Elf64_Addr	    st_value;
+	Elf64_Xword	    st_size;
 } Elf64_Sym;
+
+#define ELF32_R_SYM(i)	((i)>>8)
+#define ELF32_R_TYPE(i)   ((unsigned char)(i))
+#define ELF32_R_INFO(s,t) (((s)<<8)+(unsigned char)(t))
+
+#define ELF64_R_SYM(i)    ((i)>>32)
+#define ELF64_R_TYPE(i)   ((i)&0xffffffffL)
+#define ELF64_R_INFO(s,t) (((s)<<32)+((t)&0xffffffffL))
+
+typedef struct {
+	Elf32_Addr	r_offset;
+	Elf32_Word	r_info;
+} Elf32_Rel;
+
+typedef struct {
+	Elf32_Addr	r_offset;
+	Elf32_Word	r_info;
+	Elf32_SWord	r_addend;
+} Elf32_Rela;
+
+typedef struct {
+	Elf64_Addr	r_offset;
+	Elf64_Xword	r_info;
+} Elf64_Rel;
+
+typedef struct {
+	Elf64_Addr	    r_offset;
+	Elf64_Xword	    r_info;
+	Elf64_Sxword	r_addend;
+} Elf64_Rela;
 
 // END OF LINKTIME VIEW
 
@@ -322,6 +352,12 @@ Elf_Byte elf_check(Elf_Byte *buf);
 Elf_Byte elf_get_class(Elf_Byte *buf);
 
 Elf_Byte elf_get_data(Elf_Byte *buf);
+
+const char *elf_get_eh_type_name(unsigned int type);
+
+const char *elf_get_sh_type_name(unsigned int type);
+
+const char *elf_get_ph_type_name(unsigned int type);
 
 Elf32_Ehdr *elf_get_header32(Elf_Byte *buf);
 

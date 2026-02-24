@@ -113,7 +113,7 @@ void elf_print_section_flags(int flags)
         "MASKPROC"
     };
 
-    printf("Flags:\n");
+    printf("Flags: %d\n", flags);
 
     for(int i = 0; i < 13; i++)
     {
@@ -154,5 +154,78 @@ Elf64_Phdr *elf_get_n_program_header64(Elf64_Ehdr *header, Elf64_Word n)
     Elf64_Word off = header->e_phoff;
 
     return ((Elf64_Phdr *)((unsigned char *)header + off)) + n;
+}
+
+const char *elf_get_sh_type_name(unsigned int type)
+{
+    const char *names[20] = {
+        "NULL",
+        "PROGBITS",
+        "SYMTAB",
+        "STRTAB",
+        "RELA",
+        "HASH",
+        "DYNAMIC",
+        "NOTE",
+        "NOBITS",
+        "REL",
+        "SHLIB",
+        "DYNSYM",
+        "INIT_ARRAY",
+        "FINI_ARRAY",
+        "PREINIT_ARRAY",
+        "GROUP",
+        "SYMTAB_SHNDX",
+        "OS",
+        "PROC",
+        "USER"
+    };
+
+    if(type <= SHT_DYNSYM) return names[type];
+    if(type >= SHT_INIT_ARRAY && type <= SHT_SYMTAB_SHNDX) return names[type-2];
+    if(type >= SHT_LOOS && type <= SHT_HIOS) return names[17];
+    if(type >= SHT_LOPROC && type <= SHT_HIPROC) return names[18];
+
+    return names[19]; // user for last types
+}
+
+const char *elf_get_eh_type_name(unsigned int type)
+{
+    const char *names[7] = {
+        "NONE",
+        "REL",
+        "EXEC",
+        "DYN",
+        "CORE",
+        "OS",
+        "PROC"
+    };
+
+    if(type < 4) return names[type];
+    if(type >= ET_LOOS && type <= ET_HIOS) return names[5];
+
+    return names[6];
+}
+
+const char *elf_get_ph_type_name(unsigned int type)
+{
+    const char *names[10] = {
+        "NULL",
+        "LOAD",
+        "DYNAMIC",
+        "INTERP",
+        "NOTE",
+        "SHLIB",
+        "PHDR",
+        "TLS",
+        "OS",
+        "PROC"
+    };
+
+    if(type < 8) return names[type];
+
+    if(type >= ET_LOOS && type <= ET_HIOS) return names[8];
+
+    return names[9];
 }
 
